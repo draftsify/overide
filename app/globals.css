@@ -130,8 +130,41 @@ body {
   }
 }
 
+/* ── Site-wide animated background: slow drifting blue glows ───── */
+.site-glow {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(90px);
+  will-change: transform, opacity;
+}
+.site-glow--a {
+  width: 640px;
+  height: 640px;
+  top: -10%;
+  left: -8%;
+  background: radial-gradient(closest-side, rgba(34, 112, 255, 0.2), transparent 70%);
+  animation: glow-drift 26s ease-in-out infinite;
+}
+.site-glow--b {
+  width: 560px;
+  height: 560px;
+  top: 38%;
+  right: -10%;
+  background: radial-gradient(closest-side, rgba(0, 89, 255, 0.16), transparent 70%);
+  animation: glow-drift-2 32s ease-in-out infinite;
+}
+.site-glow--c {
+  width: 520px;
+  height: 520px;
+  bottom: -12%;
+  left: 28%;
+  background: radial-gradient(closest-side, rgba(80, 140, 255, 0.14), transparent 70%);
+  animation: glow-drift-3 38s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .hero-glow {
+  .hero-glow,
+  .site-glow {
     animation: none;
   }
 }
