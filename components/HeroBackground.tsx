@@ -2,11 +2,11 @@
 
 import { useEffect, useRef } from "react";
 
-/* Animated hero backdrop driven by a small WebGL fragment shader:
-   domain-warped fractal noise produces a soft, flowing blue "aurora"
-   glow, masked toward the top-centre. A faded line grid sits on top.
-   Falls back to a static CSS glow when WebGL is unavailable, and
-   freezes for prefers-reduced-motion. */
+/* Hero backdrop matching the reference look: a smooth, fluid mesh-gradient
+   shader (large soft colour blobs slowly drifting and blending), a fine
+   grain overlay in `overlay` blend mode, and a faded line grid on top.
+   Falls back to a static CSS glow without WebGL; freezes for
+   prefers-reduced-motion. */
 
 const VERT = `
 attribute vec2 p;
@@ -23,52 +23,50 @@ float hash(vec2 p){
   p += dot(p, p + 34.345);
   return fract(p.x * p.y);
 }
-float noise(vec2 p){
-  vec2 i = floor(p), f = fract(p);
-  float a = hash(i), b = hash(i + vec2(1.0, 0.0));
-  float c = hash(i + vec2(0.0, 1.0)), d = hash(i + vec2(1.0, 1.0));
-  vec2 u = f * f * (3.0 - 2.0 * f);
-  return mix(mix(a, b, u.x), mix(c, d, u.x), u.y);
-}
-float fbm(vec2 p){
-  float v = 0.0, a = 0.5;
-  for (int i = 0; i < 6; i++) { v += a * noise(p); p *= 2.0; a *= 0.5; }
-  return v;
-}
 
 void main(){
   vec2 uv = gl_FragCoord.xy / u_res.xy;
-  vec2 p = uv;
-  p.x *= u_res.x / u_res.y;
-  float t = u_time * 0.05;
+  float asp = u_res.x / u_res.y;
+  vec2 p = vec2(uv.x * asp, uv.y);
+  float t = u_time * 0.16;
 
-  // domain warping for organic, flowing plumes
-  vec2 q = vec2(fbm(p + vec2(0.0, t)), fbm(p + vec2(5.2, -t)));
-  vec2 r = vec2(
-    fbm(p + 3.5 * q + vec2(1.7, 9.2) + 0.15 * t),
-    fbm(p + 3.5 * q + vec2(8.3, 2.8) - 0.12 * t)
-  );
-  float f = fbm(p + 3.5 * r);
+  vec3 base = vec3(0.039, 0.039, 0.043); // #0a0a0a
 
-  float glow = smoothstep(0.15, 0.95, f);
+  // smooth, slowly drifting colour blobs (mesh-gradient style)
+  vec3 glow = vec3(0.0);
 
-  // concentrate toward the top centre, fade outward
-  vec2 c = uv - vec2(0.5, 0.02);
-  float m = smoothstep(1.05, 0.0, length(c * vec2(1.0, 1.5)));
+  vec2 c1 = vec2((0.50 + 0.16 * sin(t * 0.50)) * asp, 0.14 + 0.10 * cos(t * 0.43));
+  float d1 = distance(p, c1);
+  glow += vec3(0.133, 0.435, 1.0) * exp(-d1 * d1 * 5.0) * 1.0;   // blue
+
+  vec2 c2 = vec2((0.33 + 0.18 * cos(t * 0.37)) * asp, 0.02 + 0.12 * sin(t * 0.51));
+  float d2 = distance(p, c2);
+  glow += vec3(0.10, 0.22, 0.95) * exp(-d2 * d2 * 6.0) * 0.9;    // indigo
+
+  vec2 c3 = vec2((0.71 + 0.14 * sin(t * 0.33 + 1.0)) * asp, 0.24 + 0.10 * cos(t * 0.41));
+  float d3 = distance(p, c3);
+  glow += vec3(0.32, 0.62, 1.0) * exp(-d3 * d3 * 7.0) * 0.8;     // cyan
+
+  vec2 c4 = vec2((0.58 + 0.12 * cos(t * 0.29 + 2.0)) * asp, 0.30 + 0.10 * sin(t * 0.36));
+  float d4 = distance(p, c4);
+  glow += vec3(0.18, 0.30, 1.0) * exp(-d4 * d4 * 8.0) * 0.7;     // deep blue
+
+  // concentrate toward the top, fade outward
+  float m = smoothstep(1.05, 0.0, length((uv - vec2(0.5, 0.0)) * vec2(1.0, 1.35)));
   glow *= m;
 
-  vec3 base = vec3(0.039, 0.039, 0.043);          // #0a0a0a
-  vec3 blue = vec3(0.133, 0.435, 1.0);            // #2270ff
-  vec3 cyan = vec3(0.35, 0.62, 1.0);
+  vec3 col = base + glow;
 
-  vec3 col = base;
-  col += blue * glow * 1.15;
-  col += cyan * pow(glow, 3.0) * 0.5;             // brighter core
-  col += blue * pow(glow, 8.0) * 0.6;             // hot highlights
+  // gentle dither to kill banding
+  col += (hash(gl_FragCoord.xy) - 0.5) * 0.012;
 
   gl_FragColor = vec4(col, 1.0);
 }
 `;
+
+const GRAIN_SVG =
+  "<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(#n)'/></svg>";
+const GRAIN = `url("data:image/svg+xml,${encodeURIComponent(GRAIN_SVG)}")`;
 
 export function HeroBackground() {
   const ref = useRef<HTMLCanvasElement>(null);
@@ -148,6 +146,16 @@ export function HeroBackground() {
       }}
     >
       <canvas ref={ref} className="absolute inset-0 h-full w-full" />
+      {/* grain overlay (overlay blend), like the reference texture layer */}
+      <div
+        className="absolute inset-0"
+        style={{
+          backgroundImage: GRAIN,
+          backgroundSize: "200px 200px",
+          opacity: 0.12,
+          mixBlendMode: "overlay",
+        }}
+      />
       <div className="hero-grid absolute inset-0" />
       <div
         className="absolute inset-x-0 bottom-0 h-32"
