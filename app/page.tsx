@@ -1,6 +1,7 @@
 import { Nav } from "@/components/Nav";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/Button";
+import { LatencyVisual, SessionStack, FeeVisual } from "@/components/visuals";
 import { DOCS_URL, LOGIN_URL } from "@/lib/links";
 
 /* ── small primitives ─────────────────────────────────────────── */
@@ -9,50 +10,21 @@ function Eyebrow({ children }: { children: React.ReactNode }) {
   return <span className="eyebrow">{children}</span>;
 }
 
-function BoltIcon() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-function LockIcon() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <rect x="4" y="10" width="16" height="11" rx="2" stroke="currentColor" strokeWidth="1.6" />
-      <path d="M8 10V7a4 4 0 0 1 8 0v3" stroke="currentColor" strokeWidth="1.6" />
-    </svg>
-  );
-}
-function CoinIcon() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.6" />
-      <path d="M12 7v10M9.5 9.5h3.2a1.8 1.8 0 0 1 0 3.6H9.5h3.5a1.8 1.8 0 0 1 0 3.4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-    </svg>
-  );
-}
-
 /* ── page ─────────────────────────────────────────────────────── */
 
 const FEATURES = [
   {
-    icon: <BoltIcon />,
+    visual: <LatencyVisual />,
     title: "Low-latency execution",
     body: "Dedicated servers and optimized routing across 10+ landing services so your orders hit the market first.",
   },
   {
-    icon: <LockIcon />,
+    visual: <SessionStack />,
     title: "Private infrastructure",
     body: "Exclusive access to tools built for serious traders — not the public. Provisioned and tuned for you.",
   },
   {
-    icon: <CoinIcon />,
+    visual: <FeeVisual />,
     title: "Fee optimization",
     body: "Save more on every transaction with intelligent fee reduction that compounds across your volume.",
   },
@@ -177,14 +149,14 @@ export default function Home() {
               {FEATURES.map((f, i) => (
                 <div
                   key={f.title}
-                  className={`group flex flex-col gap-6 bg-card p-8 transition-colors hover:bg-elevated ${
+                  className={`group flex flex-col bg-card transition-colors hover:bg-elevated ${
                     i < FEATURES.length - 1 ? "border-b border-line md:border-b-0 md:border-r" : ""
                   }`}
                 >
-                  <div className="grid h-11 w-11 place-items-center rounded-[2px] bg-white/5 text-accent">
-                    {f.icon}
+                  <div className="grid-dots relative h-[200px] overflow-hidden border-b border-line">
+                    {f.visual}
                   </div>
-                  <div className="flex flex-col gap-3">
+                  <div className="flex flex-col gap-3 p-8">
                     <h3 className="display text-xl">{f.title}</h3>
                     <p className="text-sm leading-relaxed text-muted">{f.body}</p>
                   </div>
