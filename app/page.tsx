@@ -1,6 +1,7 @@
 import { Nav } from "@/components/Nav";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/Button";
+import { HeroBackground } from "@/components/HeroBackground";
 import { LatencyVisual, SessionStack, FeeVisual } from "@/components/visuals";
 import { DOCS_URL, LOGIN_URL } from "@/lib/links";
 
@@ -84,15 +85,7 @@ export default function Home() {
         <section id="hero" className="border-b border-line">
           <div className="container-max border-x border-line">
             <div className="relative overflow-hidden">
-              {/* backdrop */}
-              <div className="grid-dots pointer-events-none absolute inset-0 opacity-60" />
-              <div
-                className="pointer-events-none absolute inset-0"
-                style={{
-                  background:
-                    "radial-gradient(120% 80% at 50% -10%, rgba(34,112,255,0.18), transparent 60%)",
-                }}
-              />
+              <HeroBackground />
               <div className="relative flex min-h-[78vh] flex-col items-center justify-center gap-8 px-6 py-28 text-center">
                 <Eyebrow>Private trading infrastructure</Eyebrow>
                 <h1 className="display max-w-4xl text-[clamp(2.75rem,7vw,5rem)]">
